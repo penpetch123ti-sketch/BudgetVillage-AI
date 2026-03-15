@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BudgetVillage AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Mitr:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --green:#1a6b3c;--green-mid:#2d9b5a;--green-light:#e8f5ee;
+  --gold:#c8920a;--gold-light:#fdf3dc;
+  --red:#c0392b;--red-light:#fdecea;
+  --blue:#1a56db;--blue-light:#ebf2ff;
+  --purple:#6b46c1;--purple-light:#f3f0ff;
+  --orange:#d97706;--orange-light:#fff7ed;
+  --gray:#6b7280;--gray-light:#f4f5f7;
+  --border:#e2e8f0;--white:#fff;--text:#1a202c;--muted:#718096;
+  --radius:14px;--rsm:9px;--shadow:0 2px 14px rgba(0,0,0,0.07);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Sarabun',sans-serif;background:#eef2ee;color:var(--text);min-height:100vh;}
+.topbar{background:var(--green);color:#fff;padding:.9rem 1.25rem;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.18);}
+.topbar-icon{font-size:24px;}
+.topbar-title{font-family:'Mitr',sans-serif;font-size:17px;font-weight:500;}
+.topbar-sub{font-size:11px;opacity:.75;margin-top:2px;}
+.container{max-width:720px;margin:0 auto;padding:1.1rem 1rem 5rem;}
+.tabs{display:flex;gap:4px;margin-bottom:1.1rem;background:#fff;border-radius:var(--radius);padding:5px;box-shadow:var(--shadow);overflow-x:auto;}
+.tab{flex:1;min-width:55px;padding:8px 4px;border:none;border-radius:var(--rsm);background:transparent;font-family:'Sarabun',sans-serif;font-size:12px;color:var(--gray);cursor:pointer;transition:all .2s;white-space:nowrap;}
+.tab.active{background:var(--green);color:#fff;font-weight:500;}
+.tab:hover:not(.active){background:var(--gray-light);}
+.card{background:#fff;border-radius:var(--radius);padding:1.1rem;margin-bottom:.9rem;box-shadow:var(--shadow);}
+.card-title{font-family:'Mitr',sans-serif;font-size:15px;font-weight:400;color:var(--green);margin-bottom:.85rem;display:flex;align-items:center;gap:8px;}
+.hint{font-size:12px;color:var(--muted);margin-bottom:9px;line-height:1.65;}
+.form-row{display:flex;gap:7px;margin-bottom:9px;flex-wrap:wrap;}
+input[type=text],input[type=number],select,textarea{
+  padding:9px 11px;border:1.5px solid var(--border);border-radius:var(--rsm);
+  font-family:'Sarabun',sans-serif;font-size:14px;color:var(--text);background:#fff;transition:border .2s;width:100%;
+}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green-mid);}
+textarea{resize:none;min-height:68px;}
+.ifl{flex:2;min-width:120px;}.ism{flex:1;min-width:80px;}
+.btn{padding:9px 16px;border:1.5px solid var(--border);border-radius:var(--rsm);font-family:'Sarabun',sans-serif;font-size:14px;cursor:pointer;transition:all .2s;background:#fff;color:var(--text);font-weight:500;white-space:nowrap;}
+.btn:hover{background:var(--gray-light);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.btn-green{background:var(--green);color:#fff;border-color:var(--green);}
+.btn-green:hover{background:var(--green-mid);border-color:var(--green-mid);}
+.btn-block{width:100%;padding:12px;font-size:15px;}
+.mt8{margin-top:8px;}
+
+/* QUICK RECORD */
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:12px;}
+.cat-btn{padding:11px 5px;border:1.5px solid var(--border);border-radius:var(--radius);background:#fff;cursor:pointer;text-align:center;transition:all .2s;font-family:'Sarabun',sans-serif;position:relative;}
+.cat-btn:hover,.cat-btn.sel{border-color:var(--green-mid);background:var(--green-light);}
+.cat-btn.income-cat:hover,.cat-btn.income-cat.sel{border-color:var(--gold);background:var(--gold-light);}
+.cat-btn .cb-icon{font-size:20px;margin-bottom:3px;}
+.cat-btn .cb-label{font-size:11px;color:var(--text);}
+.cat-btn .del-cat{position:absolute;top:3px;right:5px;background:none;border:none;color:#cbd5e0;font-size:13px;cursor:pointer;line-height:1;display:none;}
+.cat-btn:hover .del-cat{display:block;}
+.del-cat:hover{color:var(--red)!important;}
+
+/* ADD CATEGORY MODAL */
+.add-cat-btn{padding:11px 5px;border:2px dashed var(--border);border-radius:var(--radius);background:transparent;cursor:pointer;text-align:center;transition:all .2s;font-family:'Sarabun',sans-serif;}
+.add-cat-btn:hover{border-color:var(--green-mid);background:var(--green-light);}
+.add-cat-btn .cb-icon{font-size:20px;margin-bottom:3px;color:var(--muted);}
+.add-cat-btn .cb-label{font-size:11px;color:var(--muted);}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal{background:#fff;border-radius:var(--radius);padding:1.5rem;width:90%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,0.15);}
+.modal-title{font-family:'Mitr',sans-serif;font-size:16px;color:var(--green);margin-bottom:1rem;}
+.emoji-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:1rem;}
+.emoji-opt{padding:8px;border:1.5px solid var(--border);border-radius:var(--rsm);cursor:pointer;text-align:center;font-size:18px;transition:all .15s;}
+.emoji-opt:hover,.emoji-opt.sel-emoji{border-color:var(--green-mid);background:var(--green-light);}
+.modal-actions{display:flex;gap:8px;margin-top:1rem;}
+
+.amount-row{display:flex;gap:8px;align-items:center;}
+.amount-disp{flex:1;font-family:'Mitr',sans-serif;font-size:28px;color:var(--text);padding:10px 14px;border:2px solid var(--border);border-radius:var(--radius);background:var(--gray-light);min-width:0;}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px;}
+.np-btn{padding:13px;border:1.5px solid var(--border);border-radius:var(--rsm);background:#fff;font-family:'Mitr',sans-serif;font-size:18px;cursor:pointer;transition:all .15s;text-align:center;}
+.np-btn:hover{background:var(--gray-light);}
+.np-btn.np-del{color:var(--red);}
+.np-btn.np-ok{background:var(--green);color:#fff;border-color:var(--green);font-size:15px;}
+.np-btn.np-ok:hover{background:var(--green-mid);}
+
+/* VOICE */
+.voice-btn{width:100%;padding:13px;border-radius:var(--radius);border:2px solid var(--green);background:var(--green-light);font-family:'Mitr',sans-serif;font-size:15px;font-weight:400;color:var(--green);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px;}
+.voice-btn.recording{background:var(--red-light);border-color:var(--red);color:var(--red);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.6;}}
+.upload-area{border:2px dashed var(--border);border-radius:var(--radius);padding:1.5rem;text-align:center;cursor:pointer;transition:all .2s;background:var(--gray-light);}
+.upload-area:hover{border-color:var(--green-mid);background:var(--green-light);}
+.upload-area input{display:none;}
+
+/* ENTRIES */
+.entry-list{display:flex;flex-direction:column;gap:6px;}
+.entry{display:flex;align-items:center;gap:9px;padding:9px 11px;background:var(--gray-light);border-radius:var(--rsm);font-size:13px;}
+.entry-desc{flex:2;color:var(--text);}
+.badge{padding:3px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap;}
+.b-food{background:var(--gold-light);color:var(--gold);}
+.b-transport{background:var(--blue-light);color:var(--blue);}
+.b-util{background:var(--purple-light);color:var(--purple);}
+.b-shopping{background:var(--orange-light);color:var(--orange);}
+.b-income{background:var(--green-light);color:var(--green);}
+.b-custom{background:#f0f4ff;color:#3b5bdb;}
+.b-other{background:var(--gray-light);color:var(--gray);}
+.entry-amt{flex:1;text-align:right;font-weight:600;white-space:nowrap;}
+.exp{color:var(--red);}.inc{color:var(--green);}
+.del-btn{background:none;border:none;cursor:pointer;color:#cbd5e0;font-size:17px;line-height:1;padding:0 2px;}
+.del-btn:hover{color:var(--red);}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:.9rem;}
+.metric{background:#fff;border-radius:var(--radius);padding:.9rem;text-align:center;box-shadow:var(--shadow);}
+.metric-label{font-size:11px;color:var(--muted);margin-bottom:5px;}
+.metric-val{font-family:'Mitr',sans-serif;font-size:20px;font-weight:400;}
+.bar-row{margin-bottom:10px;}
+.bar-meta{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:3px;}
+.bar-track{height:9px;background:var(--gray-light);border-radius:5px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:5px;transition:width .5s ease;}
+
+/* BUDGET */
+.budget-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--gray-light);border-radius:var(--rsm);margin-bottom:7px;}
+.bi-label{flex:1;font-size:13px;}
+.bi-bar-wrap{flex:2;}
+.bi-bar-track{height:7px;background:var(--border);border-radius:4px;overflow:hidden;}
+.bi-bar-fill{height:100%;border-radius:4px;transition:width .4s;}
+.bi-text{font-size:11px;color:var(--muted);margin-top:3px;}
+.bi-warn{background:var(--red-light);border-left:3px solid var(--red);}
+.alert-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;background:var(--red-light);color:var(--red);font-weight:500;margin-left:6px;}
+.goal-ring-wrap{display:flex;flex-direction:column;align-items:center;margin:.75rem 0;}
+.goal-ring{position:relative;width:120px;height:120px;}
+.goal-ring svg{transform:rotate(-90deg);}
+.goal-ring-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.goal-pct{font-family:'Mitr',sans-serif;font-size:24px;color:var(--green);}
+.goal-sub{font-size:11px;color:var(--muted);}
+
+/* BADGES */
+.badges-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;}
+.badge-card{background:var(--gray-light);border-radius:var(--radius);padding:.9rem;text-align:center;opacity:.4;transition:all .3s;}
+.badge-card.earned{background:var(--gold-light);opacity:1;border:1.5px solid var(--gold);}
+.badge-icon{font-size:26px;margin-bottom:5px;}
+.badge-name{font-size:12px;font-weight:500;color:var(--text);}
+.badge-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+.streak-bar{display:flex;gap:5px;margin:1rem 0;}
+.streak-day{flex:1;height:26px;border-radius:5px;background:var(--gray-light);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);}
+.streak-day.done{background:var(--green);color:#fff;}
+.streak-day.today{background:var(--gold);color:#fff;}
+
+/* AI SECTION */
+.ai-result-wrap{display:flex;flex-direction:column;gap:12px;margin-top:1rem;}
+.ai-section{border-radius:var(--radius);overflow:hidden;}
+.ai-section-header{display:flex;align-items:center;gap:8px;padding:10px 14px;font-family:'Mitr',sans-serif;font-size:13px;font-weight:400;}
+.ai-section-body{padding:12px 14px;font-size:14px;line-height:1.9;color:var(--text);}
+.ais-status .ai-section-header{background:var(--green);color:#fff;}
+.ais-status .ai-section-body{background:var(--green-light);border:1px solid #b7dfc8;border-top:none;border-radius:0 0 var(--radius) var(--radius);}
+.ais-watch .ai-section-header{background:var(--gold);color:#fff;}
+.ais-watch .ai-section-body{background:var(--gold-light);border:1px solid #f0d49a;border-top:none;border-radius:0 0 var(--radius) var(--radius);}
+.ais-question .ai-section-header{background:var(--blue);color:#fff;}
+.ais-question .ai-section-body{background:var(--blue-light);border:1px solid #b3cef5;border-top:none;border-radius:0 0 var(--radius) var(--radius);}
+.ais-cheer .ai-section-header{background:var(--purple);color:#fff;}
+.ais-cheer .ai-section-body{background:var(--purple-light);border:1px solid #c4b5e8;border-top:none;border-radius:0 0 var(--radius) var(--radius);}
+.advisor-result-wrap{border-radius:var(--radius);overflow:hidden;margin-top:1rem;}
+.advisor-result-wrap .ai-section-header{background:var(--blue);color:#fff;}
+.advisor-result-wrap .ai-section-body{background:var(--blue-light);border:1px solid #b3cef5;border-top:none;border-radius:0 0 var(--radius) var(--radius);}
+.loading-box{padding:1rem 1.1rem;background:var(--gray-light);border-radius:var(--radius);display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted);margin-top:1rem;}
+.thinking-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green-mid);margin:0 2px;animation:blink 1.2s infinite;}
+.thinking-dot:nth-child(2){animation-delay:.2s;}
+.thinking-dot:nth-child(3){animation-delay:.4s;}
+@keyframes blink{0%,100%{opacity:.2;}50%{opacity:1;}}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid #cce8d8;border-top-color:var(--green-mid);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green-mid);display:inline-block;}
+.q-history{display:flex;flex-direction:column;gap:12px;margin-top:1rem;}
+.q-bubble-user{background:var(--green);color:#fff;border-radius:16px 16px 4px 16px;padding:10px 14px;font-size:14px;align-self:flex-end;max-width:85%;}
+.q-bubble-ai{background:#fff;border:1px solid var(--border);border-radius:16px 16px 16px 4px;padding:12px 14px;font-size:14px;line-height:1.9;color:var(--text);}
+
+.q-history{display:flex;flex-direction:column;gap:12px;margin-top:1rem;}
+.q-bubble-user{background:var(--green);color:#fff;border-radius:16px 16px 4px 16px;padding:10px 14px;font-size:14px;align-self:flex-end;max-width:85%;}
+.q-bubble-ai{background:#fff;border:1px solid var(--border);border-radius:16px 16px 16px 4px;padding:12px 14px;font-size:14px;line-height:1.9;color:var(--text);}
+.q-pair{margin-top:10px;}
+.q-pair-old{opacity:.85;}
+.history-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--gray-light);border-radius:var(--rsm);margin-bottom:7px;}
+.history-num{width:24px;height:24px;border-radius:50%;background:var(--green);color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.history-content{flex:1;min-width:0;}
+.history-q{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px;}
+.history-time{font-size:11px;color:var(--muted);}
+
+/* ABOUT PAGE */
+.about-section{border-radius:var(--radius);overflow:hidden;margin-bottom:1rem;box-shadow:var(--shadow);}
+.about-sec-header{background:var(--sec-color,var(--green));color:#fff;padding:10px 14px;font-family:'Mitr',sans-serif;font-size:14px;font-weight:400;display:flex;align-items:center;gap:10px;}
+.about-sec-tag{background:rgba(255,255,255,0.25);padding:2px 10px;border-radius:20px;font-size:12px;font-weight:500;background:var(--green);}
+.about-sec-body{background:var(--sec-bg,var(--green-light));border:1px solid var(--sec-border,#b7dfc8);border-top:none;padding:1.1rem;}
+.about-pain{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start;}
+.about-pain-icon{font-size:24px;min-width:32px;}
+.about-pain-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px;}
+.about-pain-text{font-size:13px;color:var(--muted);line-height:1.65;}
+.about-target-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:4px;}
+.about-target-card{padding:8px 4px;background:#fff;border-radius:var(--rsm);text-align:center;font-size:12px;color:var(--text);border:1px solid var(--border);}
+.feature-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
+.feature-item{background:#fff;border-radius:var(--rsm);padding:9px 7px;text-align:center;font-size:12px;font-weight:500;color:var(--text);border:1px solid var(--border);line-height:1.5;}
+.feature-item span{font-size:10px;color:var(--muted);font-weight:400;}
+.arch-flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.arch-box{flex:1;min-width:70px;padding:10px 6px;border-radius:var(--rsm);text-align:center;font-size:12px;font-weight:500;border:1px solid;line-height:1.5;}
+.arch-box span{font-size:10px;font-weight:400;display:block;color:var(--muted);}
+.arch-arrow{color:var(--muted);font-size:16px;flex-shrink:0;}
+.arch-note{font-size:11px;color:var(--muted);margin-top:6px;padding:7px 10px;background:rgba(255,255,255,0.6);border-radius:var(--rsm);}
+.tools-list{display:flex;flex-direction:column;gap:8px;}
+.tool-row{display:flex;align-items:flex-start;gap:10px;padding:10px;background:#fff;border-radius:var(--rsm);border:1px solid var(--border);}
+.tool-icon{width:36px;height:36px;border-radius:var(--rsm);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.tool-info{flex:1;}
+.tool-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px;}
+.tool-use{font-size:12px;color:var(--muted);line-height:1.55;}
+.tool-stage{font-size:11px;padding:3px 8px;background:var(--gray-light);border-radius:20px;white-space:nowrap;color:var(--gray);align-self:flex-start;flex-shrink:0;}
+.delegation-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;}
+.delegation-card{background:#fff;border-radius:var(--rsm);padding:10px 12px;border:1px solid var(--border);}
+.del-role{font-size:11px;color:var(--muted);margin-bottom:3px;}
+.del-task{font-size:13px;font-weight:500;color:var(--text);}
+.value-list{display:flex;flex-direction:column;gap:7px;}
+.value-item{font-size:14px;color:var(--text);padding:8px 12px;background:#fff;border-radius:var(--rsm);border:1px solid var(--border);line-height:1.6;}
+.roadmap-list{display:flex;flex-direction:column;gap:8px;}
+.roadmap-item{display:flex;align-items:flex-start;gap:10px;}
+.roadmap-phase{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;flex-shrink:0;}
+.roadmap-detail{font-size:13px;color:var(--muted);line-height:1.6;padding-top:4px;}
+
+.page{display:none;}.page.active{display:block;}
+.empty{text-align:center;padding:2rem 1rem;color:var(--muted);font-size:14px;}
+.report-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:14px;}
+.report-row:last-child{border-bottom:none;font-weight:600;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-icon">💰</div>
+  <div>
+    <div class="topbar-title">BudgetVillage AI</div>
+    <div class="topbar-sub">บัญชีครัวเรือนอัจฉริยะ — ใช้งานง่าย มี AI ช่วยวิเคราะห์</div>
+  </div>
+</div>
+
+<!-- MODAL เพิ่มหมวดเอง -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">➕ เพิ่มหมวดหมู่ใหม่</div>
+    <p class="hint" style="margin-bottom:10px;">เลือก Emoji แล้วตั้งชื่อหมวด</p>
+    <div class="emoji-grid" id="emoji-grid"></div>
+    <div class="form-row">
+      <input type="text" id="new-cat-name" placeholder="ชื่อหมวด เช่น ค่ายา" maxlength="10">
+    </div>
+    <div style="margin-bottom:8px;">
+      <label style="font-size:13px;color:var(--muted);">ประเภท:</label><br>
+      <label style="font-size:14px;margin-right:16px;margin-top:6px;display:inline-flex;align-items:center;gap:5px;">
+        <input type="radio" name="new-cat-type" value="expense" checked> รายจ่าย
+      </label>
+      <label style="font-size:14px;display:inline-flex;align-items:center;gap:5px;">
+        <input type="radio" name="new-cat-type" value="income"> รายรับ
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-green btn-block" onclick="saveNewCat()">บันทึกหมวดหมู่</button>
+      <button class="btn" onclick="closeModal()" style="min-width:70px;">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab active" onclick="showPage('quick')">⚡ บันทึก</button>
+    <button class="tab" onclick="showPage('more')">➕ เพิ่ม</button>
+    <button class="tab" onclick="showPage('summary')">📊 สรุป</button>
+    <button class="tab" onclick="showPage('budget')">🎯 งบ</button>
+    <button class="tab" onclick="showPage('badge')">🏆 รางวัล</button>
+    <button class="tab" onclick="showPage('analyze')">🤖 AI</button>
+    <button class="tab" onclick="showPage('about')">ℹ️ เกี่ยวกับ</button>
+  </div>
+
+  <!-- QUICK RECORD -->
+  <div class="page active" id="page-quick">
+    <div class="card">
+      <div class="card-title">⚡ บันทึกด่วน</div>
+      <div class="cat-grid" id="cat-grid"></div>
+      <div class="amount-row">
+        <div class="amount-disp" id="amount-disp">0</div>
+        <button class="btn btn-green" onclick="quickSave()" style="padding:10px 18px;font-size:15px;">บันทึก ✓</button>
+      </div>
+      <div class="numpad" id="numpad"></div>
+      <div id="quick-status" style="margin-top:8px;font-size:13px;min-height:18px;"></div>
+    </div>
+    <div id="entries-quick"></div>
+  </div>
+
+  <!-- MORE INPUT -->
+  <div class="page" id="page-more">
+    <div class="card">
+      <div class="card-title">🎤 พูดเพื่อบันทึก</div>
+      <p class="hint">กดปุ่มแล้วพูด เช่น "ค่าข้าวกลางวัน 45 บาท" (ต้องใช้ Chrome)</p>
+      <button class="voice-btn" id="voice-btn" onclick="toggleVoice()">
+        <span id="voice-icon">🎙️</span><span id="voice-label">กดเพื่อพูด</span>
+      </button>
+      <div id="voice-result" style="margin-top:9px;font-size:13px;color:var(--muted);min-height:18px;"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📸 ถ่ายรูปใบเสร็จ</div>
+      <p class="hint">AI อ่านใบเสร็จและบันทึกรายการให้อัตโนมัติ</p>
+      <div class="upload-area" onclick="document.getElementById('receipt-input').click()">
+        <input type="file" id="receipt-input" accept="image/*" onchange="handleReceipt(event)">
+        <div style="font-size:28px;margin-bottom:7px;">🧾</div>
+        <div style="font-size:13px;color:var(--muted);">แตะเพื่อเลือกรูปหรือถ่ายภาพ</div>
+      </div>
+      <div id="receipt-status" style="margin-top:9px;font-size:12px;color:var(--muted);"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">✍️ พิมพ์หลายรายการ</div>
+      <p class="hint">พิมพ์รายการ + จำนวนเงิน AI จัดหมวดหมู่ให้</p>
+      <textarea id="bulk-input" placeholder="ค่าข้าวเช้า 45&#10;ค่ารถ 20&#10;ค่าไฟ 350&#10;เงินเดือน 9000"></textarea>
+      <button class="btn btn-green btn-block mt8" id="bulk-btn" onclick="bulkAdd()">เพิ่มทั้งหมด + AI จัดหมวดหมู่ →</button>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="page" id="page-summary">
+    <div style="display:flex;gap:8px;margin-bottom:.9rem;">
+      <button class="btn" id="btn-week" onclick="setReport('week')" style="flex:1;">รายสัปดาห์</button>
+      <button class="btn btn-green" id="btn-month" onclick="setReport('month')" style="flex:1;">รายเดือน</button>
+    </div>
+    <div class="metrics" id="metrics-grid"></div>
+    <div class="card" id="chart-card"></div>
+    <div class="card" id="report-card"></div>
+    <div id="entries-summary"></div>
+  </div>
+
+  <!-- BUDGET -->
+  <div class="page" id="page-budget">
+    <div class="card">
+      <div class="card-title">🎯 ตั้งงบประมาณรายหมวด</div>
+      <p class="hint">ระบบจะแจ้งเตือนเมื่อใกล้เกินงบ 80%</p>
+      <div id="budget-form"></div>
+      <button class="btn btn-green btn-block mt8" onclick="saveBudgets()">บันทึกงบประมาณ</button>
+    </div>
+    <div class="card"><div class="card-title">📊 สถานะงบ</div><div id="budget-status"></div></div>
+    <div class="card">
+      <div class="card-title">💰 เป้าหมายการออม</div>
+      <div class="form-row">
+        <input type="number" id="goal-amt" placeholder="เงินที่อยากออม (บาท/เดือน)" min="0">
+        <button class="btn btn-green" onclick="saveGoal()">บันทึก</button>
+      </div>
+      <div id="goal-display"></div>
+    </div>
+  </div>
+
+  <!-- BADGES -->
+  <div class="page" id="page-badge">
+    <div class="card">
+      <div class="card-title">🔥 Streak การบันทึก</div>
+      <div class="streak-bar" id="streak-bar"></div>
+      <div style="text-align:center;font-size:13px;color:var(--muted);" id="streak-text"></div>
+    </div>
+    <div class="card"><div class="card-title">🏅 เหรียญรางวัล</div><div class="badges-grid" id="badges-grid"></div></div>
+  </div>
+
+  <!-- AI -->
+  <div class="page" id="page-analyze">
+
+    <!-- ฟีเจอร์ใหม่ 1: ทำนายวันเงินหมด -->
+    <div class="card">
+      <div class="card-title">📅 ทำนายวันที่เงินจะหมด</div>
+      <p class="hint">AI วิเคราะห์ pattern การใช้เงินของคุณ แล้วบอกล่วงหน้าว่าเงินจะหมดเมื่อไหร่</p>
+      <button class="btn btn-green btn-block" onclick="predictCashOut()" id="predict-btn">คำนวณเลย →</button>
+      <div id="predict-output"></div>
+    </div>
+
+    <!-- ฟีเจอร์ใหม่ 2: ช่วยตัดสินใจซื้อของ -->
+    <div class="card">
+      <div class="card-title">🛒 ซื้อได้มั้ย? ให้ AI ช่วยตัดสินใจ</div>
+      <p class="hint">พิมพ์ชื่อของที่อยากซื้อและราคา AI จะบอกว่าควรซื้อมั้ย ต้องรออีกนานแค่ไหน</p>
+      <div class="form-row">
+        <input type="text" id="buy-item" placeholder="ชื่อสินค้า เช่น โทรศัพท์ใหม่" style="flex:2;">
+        <input type="number" id="buy-price" placeholder="ราคา (บาท)" style="flex:1;" min="0">
+      </div>
+      <button class="btn btn-green btn-block" onclick="shouldIBuy()" id="buy-btn">ให้ AI ตัดสินใจ →</button>
+      <div id="buy-output"></div>
+    </div>
+
+    <!-- ส่วนวิเคราะห์ -->
+    <div class="card">
+      <div class="card-title">🤖 AI วิเคราะห์สถานการณ์การเงิน</div>
+      <p class="hint">AI จะแบ่งผลวิเคราะห์เป็น 4 ส่วน อ่านง่าย เข้าใจเร็ว</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:12px;font-size:12px;">
+        <div style="padding:7px 10px;background:var(--green-light);border-radius:var(--rsm);color:var(--green);display:flex;align-items:center;gap:6px;">🟢 สถานการณ์ตอนนี้</div>
+        <div style="padding:7px 10px;background:var(--gold-light);border-radius:var(--rsm);color:var(--gold);display:flex;align-items:center;gap:6px;">🟡 จุดที่ควรระวัง</div>
+        <div style="padding:7px 10px;background:var(--blue-light);border-radius:var(--rsm);color:var(--blue);display:flex;align-items:center;gap:6px;">🔵 คำถามให้คิดต่อ</div>
+        <div style="padding:7px 10px;background:var(--purple-light);border-radius:var(--rsm);color:var(--purple);display:flex;align-items:center;gap:6px;">💜 กำลังใจจาก AI</div>
+      </div>
+      <button class="btn btn-green btn-block" onclick="analyzeAI()" id="analyze-btn">วิเคราะห์เลย →</button>
+      <div id="ai-output"></div>
+    </div>
+
+    <!-- ส่วนถาม-ตอบ -->
+    <div class="card">
+      <div class="card-title">💬 ถาม AI Money Coach</div>
+      <p class="hint">ถามอะไรก็ได้ AI จะตอบแบบให้คุณคิดตาม ใช้ตัวเลขจริงของคุณ</p>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;" id="quick-questions"></div>
+      <div class="form-row">
+        <input type="text" id="advisor-q" placeholder="เช่น อยากซื้อมอไซค์ใหม่ ควรทำยังไง?" onkeydown="if(event.key==='Enter') askAdvisor()">
+        <button class="btn btn-green" onclick="askAdvisor()">ถาม</button>
+      </div>
+      <div id="advisor-output"></div>
+    </div>
+
+    <!-- ประวัติการถาม -->
+    <div class="card" id="history-card" style="display:none;">
+      <div class="card-title" style="justify-content:space-between;">
+        <span>🗂️ ประวัติทั้งหมด</span>
+        <button class="btn" style="font-size:12px;padding:4px 10px;color:var(--red);border-color:var(--red);" onclick="clearHistory()">ล้างทั้งหมด</button>
+      </div>
+      <div id="history-list"></div>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <div class="page" id="page-about">
+
+    <!-- Q1 -->
+    <div class="about-section" style="--sec-color:#1a6b3c;--sec-bg:#e8f5ee;--sec-border:#b7dfc8;">
+      <div class="about-sec-header">
+        <span class="about-sec-tag">Q1</span>
+        <span>ปัญหาและกลุ่มเป้าหมาย</span>
+      </div>
+      <div class="about-sec-body">
+        <div class="about-pain">
+          <div class="about-pain-icon">😰</div>
+          <div>
+            <div class="about-pain-title">Pain Point</div>
+            <div class="about-pain-text">คนไทยกว่า 60% ไม่เคยจดบัญชีรายรับรายจ่าย ไม่รู้ว่าเงินหายไปไหน ทำให้ออมเงินไม่ได้และเป็นหนี้โดยไม่รู้ตัว</div>
+          </div>
+        </div>
+        <div class="about-pain">
+          <div class="about-pain-icon">🏘️</div>
+          <div>
+            <div class="about-pain-title">บริบทที่เกิดปัญหา</div>
+            <div class="about-pain-text">คนในชุมชนและครัวเรือนทั่วไปขาดเครื่องมือที่เข้าใจง่ายพอ — แอปในตลาดส่วนใหญ่ซับซ้อนเกินไป</div>
+          </div>
+        </div>
+        <div class="about-target-grid">
+          <div class="about-target-card">👨‍👩‍👧 ครัวเรือนไทย</div>
+          <div class="about-target-card">🧓 ผู้สูงอายุ</div>
+          <div class="about-target-card">🌾 เกษตรกร</div>
+          <div class="about-target-card">🎓 นักศึกษา</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="about-section" style="--sec-color:#1a56db;--sec-bg:#ebf2ff;--sec-border:#b3cef5;">
+      <div class="about-sec-header">
+        <span class="about-sec-tag" style="background:#1a56db;">Q2</span>
+        <span>การออกแบบและ Framework</span>
+      </div>
+      <div class="about-sec-body">
+        <div style="font-size:13px;font-weight:500;color:#1a56db;margin-bottom:10px;">Features ทั้งหมด</div>
+        <div class="feature-grid">
+          <div class="feature-item">⚡ บันทึกด่วน<br><span>กด Numpad ได้ทันที</span></div>
+          <div class="feature-item">🎤 พูดบันทึก<br><span>Speech API + AI แปลง</span></div>
+          <div class="feature-item">📸 สแกนใบเสร็จ<br><span>Claude Vision อ่านอัตโนมัติ</span></div>
+          <div class="feature-item">📊 Dashboard<br><span>กราฟแยกหมวดหมู่</span></div>
+          <div class="feature-item">🎯 ตั้งงบ<br><span>แจ้งเตือนใกล้เกิน</span></div>
+          <div class="feature-item">🏆 Gamification<br><span>Streak + เหรียญรางวัล</span></div>
+          <div class="feature-item">🤖 AI วิเคราะห์<br><span>4 มิติ อ่านง่าย</span></div>
+          <div class="feature-item">💬 AI Coach<br><span>ตอบแบบให้คิดตาม</span></div>
+        </div>
+        <div style="font-size:13px;font-weight:500;color:#1a56db;margin:14px 0 10px;">System Architecture</div>
+        <div class="arch-flow">
+          <div class="arch-box" style="background:#e8f5ee;border-color:#b7dfc8;">👤 ผู้ใช้<br><span>พิมพ์ / พูด / ถ่ายรูป</span></div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-box" style="background:#ebf2ff;border-color:#b3cef5;">🌐 Web App<br><span>HTML + JS</span></div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-box" style="background:#fdf3dc;border-color:#f0d49a;">🤖 Claude API<br><span>claude-sonnet-4</span></div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-box" style="background:#f3f0ff;border-color:#c4b5e8;">📲 ผลลัพธ์<br><span>วิเคราะห์ / บันทึก</span></div>
+        </div>
+        <div class="arch-note">ข้อมูลเก็บใน localStorage — ไม่มี Backend ไม่ต้องล็อกอิน</div>
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="about-section" style="--sec-color:#c8920a;--sec-bg:#fdf3dc;--sec-border:#f0d49a;">
+      <div class="about-sec-header">
+        <span class="about-sec-tag" style="background:#c8920a;">Q3</span>
+        <span>กระบวนการสร้างและ AI Tools</span>
+      </div>
+      <div class="about-sec-body">
+        <div class="tools-list">
+          <div class="tool-row">
+            <div class="tool-icon" style="background:#f0e6ff;color:#6b46c1;">💡</div>
+            <div class="tool-info">
+              <div class="tool-name">Claude.ai</div>
+              <div class="tool-use">วางแผนโครงการ, Brainstorm ฟีเจอร์, เขียนโค้ด HTML/CSS/JS ทั้งหมด</div>
+            </div>
+            <div class="tool-stage">วางแผน + สร้าง</div>
+          </div>
+          <div class="tool-row">
+            <div class="tool-icon" style="background:#e8f5ee;color:#1a6b3c;">🤖</div>
+            <div class="tool-info">
+              <div class="tool-name">Claude API</div>
+              <div class="tool-use">AI หลักในแอป — วิเคราะห์การเงิน, อ่านใบเสร็จ, จัดหมวดหมู่, ตอบคำถาม</div>
+            </div>
+            <div class="tool-stage">AI ในระบบ</div>
+          </div>
+          <div class="tool-row">
+            <div class="tool-icon" style="background:#ebf2ff;color:#1a56db;">🎙️</div>
+            <div class="tool-info">
+              <div class="tool-name">Web Speech API</div>
+              <div class="tool-use">รับเสียงจากผู้ใช้แล้วแปลงเป็นข้อความ ก่อนส่งให้ Claude ประมวลผล</div>
+            </div>
+            <div class="tool-stage">Voice Input</div>
+          </div>
+          <div class="tool-row">
+            <div class="tool-icon" style="background:#fff7ed;color:#d97706;">🎨</div>
+            <div class="tool-info">
+              <div class="tool-name">Canva</div>
+              <div class="tool-use">ออกแบบ Flyer และ Poster สำหรับนำเสนอ</div>
+            </div>
+            <div class="tool-stage">ออกแบบ</div>
+          </div>
+        </div>
+        <div style="font-size:13px;font-weight:500;color:#c8920a;margin:14px 0 8px;">การแบ่งงานในทีม</div>
+        <div class="delegation-grid">
+          <div class="delegation-card"><div class="del-role">คนที่ 1</div><div class="del-task">วางแผน + เขียน Prompt</div></div>
+          <div class="delegation-card"><div class="del-role">คนที่ 2</div><div class="del-task">สร้าง UI / Frontend</div></div>
+          <div class="delegation-card"><div class="del-role">คนที่ 3</div><div class="del-task">เชื่อม API + ทดสอบ</div></div>
+          <div class="delegation-card"><div class="del-role">คนที่ 4</div><div class="del-task">Slide + Flyer + Demo</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="about-section" style="--sec-color:#6b46c1;--sec-bg:#f3f0ff;--sec-border:#c4b5e8;">
+      <div class="about-sec-header">
+        <span class="about-sec-tag" style="background:#6b46c1;">Q4</span>
+        <span>คุณค่าและการต่อยอด</span>
+      </div>
+      <div class="about-sec-body">
+        <div style="font-size:13px;font-weight:500;color:#6b46c1;margin-bottom:10px;">Value Proposition</div>
+        <div class="value-list">
+          <div class="value-item">✅ ใช้งานง่าย — บันทึกได้ใน 3 วินาทีด้วย Numpad ไม่ต้องพิมพ์</div>
+          <div class="value-item">✅ ฟรี — ไม่ต้องสมัครสมาชิก ไม่มีค่าใช้จ่าย</div>
+          <div class="value-item">✅ AI วิเคราะห์ — ช่วยให้เข้าใจพฤติกรรมการเงินตัวเอง ไม่ใช่แค่ตัวเลข</div>
+          <div class="value-item">✅ ภาษาไทย — ออกแบบมาสำหรับคนไทยโดยเฉพาะ</div>
+          <div class="value-item">✅ Privacy — ข้อมูลอยู่ในเครื่องตัวเอง ไม่ได้ส่งขึ้น Server</div>
+        </div>
+        <div style="font-size:13px;font-weight:500;color:#6b46c1;margin:14px 0 10px;">Roadmap อนาคต</div>
+        <div class="roadmap-list">
+          <div class="roadmap-item"><div class="roadmap-phase" style="background:#e8f5ee;color:#1a6b3c;">ระยะที่ 1</div><div class="roadmap-detail">เพิ่ม Cloud Sync — บันทึกข้อมูลข้ามอุปกรณ์ได้</div></div>
+          <div class="roadmap-item"><div class="roadmap-phase" style="background:#ebf2ff;color:#1a56db;">ระยะที่ 2</div><div class="roadmap-detail">พัฒนาเป็น LINE Bot — คนชุมชนใช้ LINE อยู่แล้ว ไม่ต้องโหลดแอปใหม่</div></div>
+          <div class="roadmap-item"><div class="roadmap-phase" style="background:#fdf3dc;color:#c8920a;">ระยะที่ 3</div><div class="roadmap-detail">เชื่อมกับ อสม. และ รพ.สต. — ใช้ข้อมูลการเงินเพื่อวางแผนสุขภาพในชุมชน</div></div>
+          <div class="roadmap-item"><div class="roadmap-phase" style="background:#f3f0ff;color:#6b46c1;">ระยะที่ 4</div><div class="roadmap-detail">AI Personalized — แนะนำตามรูปแบบชีวิตรายบุคคลจริง</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ===== STATE =====
+const DEFAULT_CATS=[
+  {id:'food',icon:'🍚',label:'อาหาร',type:'expense'},
+  {id:'transport',icon:'🚌',label:'เดินทาง',type:'expense'},
+  {id:'util',icon:'💡',label:'ค่าใช้จ่าย',type:'expense'},
+  {id:'shopping',icon:'🛒',label:'ช้อปปิ้ง',type:'expense'},
+  {id:'other',icon:'📦',label:'อื่น ๆ',type:'expense'},
+  {id:'income',icon:'💵',label:'รายรับ',type:'income'},
+  {id:'work',icon:'💼',label:'รายได้พิเศษ',type:'income'},
+  {id:'gift',icon:'🎁',label:'ของขวัญ',type:'income'},
+];
+const EMOJI_OPTIONS=['🏥','💊','🎓','🎮','🐕','🌿','🏋️','✈️','🎵','📱','☕','🎂','👕','💈','🔧','🏠','💻','📚','🍺','🚗','💅','🎯','🌸','🍕'];
+
+let customCats=JSON.parse(localStorage.getItem('bv_customcats')||'[]');
+let allCats=()=>[...DEFAULT_CATS,...customCats];
+let entries=JSON.parse(localStorage.getItem('bv_entries')||JSON.stringify([
+  {id:1,desc:'ค่าข้าวเช้า-เย็น',amt:120,type:'expense',cat:'food'},
+  {id:2,desc:'ค่ารถโดยสาร',amt:40,type:'expense',cat:'transport'},
+  {id:3,desc:'ค่าไฟฟ้า',amt:350,type:'expense',cat:'util'},
+  {id:4,desc:'ซื้อของใช้',amt:200,type:'expense',cat:'shopping'},
+  {id:5,desc:'เงินเดือน',amt:9000,type:'income',cat:'income'},
+]));
+let nextId=Math.max(0,...entries.map(e=>e.id))+1;
+let goalAmt=parseFloat(localStorage.getItem('bv_goal')||'1000');
+let streak=parseInt(localStorage.getItem('bv_streak')||'5');
+let budgets=JSON.parse(localStorage.getItem('bv_budgets')||'{"food":3000,"transport":1000,"util":800,"shopping":1500}');
+let selectedCat='food';
+let amountStr='0';
+let selectedEmoji='🏥';
+const ANTHROPIC_API_KEY=''; // ใส่ API Key ที่นี่
+
+function save(){
+  localStorage.setItem('bv_entries',JSON.stringify(entries));
+  localStorage.setItem('bv_customcats',JSON.stringify(customCats));
+  localStorage.setItem('bv_goal',goalAmt);
+  localStorage.setItem('bv_streak',streak);
+  localStorage.setItem('bv_budgets',JSON.stringify(budgets));
+}
+
+function getCatInfo(id){return allCats().find(c=>c.id===id)||{icon:'📦',label:'อื่น ๆ',type:'expense'};}
+function catBadgeClass(id){
+  const map={food:'b-food',transport:'b-transport',util:'b-util',shopping:'b-shopping',income:'b-income',work:'b-income',gift:'b-income',other:'b-other'};
+  return map[id]||'b-custom';
+}
+const catColor={food:'#c8920a',transport:'#1a56db',util:'#6b46c1',shopping:'#d97706',income:'#1a6b3c',work:'#1a6b3c',gift:'#2d9b5a'};
+
+// ===== API =====
+async function callClaude(system,userMsg,imageData,imageType){
+  const headers={'Content-Type':'application/json'};
+  if(ANTHROPIC_API_KEY) headers['x-api-key']=ANTHROPIC_API_KEY;
+  let content=imageData
+    ?[{type:'image',source:{type:'base64',media_type:imageType,data:imageData}},{type:'text',text:userMsg}]
+    :userMsg;
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',headers,
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,system,messages:[{role:'user',content}]})
+  });
+  const data=await res.json();
+  if(data.error) throw new Error(data.error.message);
+  return data.content?.[0]?.text||'';
+}
+
+// ===== NAVIGATION =====
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  ['quick','more','summary','budget','badge','analyze','about'].forEach((n,i)=>{
+    if(n===name) document.querySelectorAll('.tab')[i].classList.add('active');
+  });
+  if(name==='quick'){renderCatGrid();renderEntriesQuick();}
+  if(name==='summary') renderSummary();
+  if(name==='budget'){renderBudgetForm();renderBudgetStatus();renderGoal();}
+  if(name==='badge') renderBadges();
+}
+
+// ===== MODAL: ADD CUSTOM CAT =====
+function openModal(){
+  selectedEmoji=EMOJI_OPTIONS[0];
+  document.getElementById('new-cat-name').value='';
+  document.getElementById('emoji-grid').innerHTML=EMOJI_OPTIONS.map(e=>
+    `<div class="emoji-opt${e===selectedEmoji?' sel-emoji':''}" onclick="selectEmoji('${e}')">${e}</div>`
+  ).join('');
+  document.getElementById('modal-overlay').classList.add('show');
+}
+function selectEmoji(e){
+  selectedEmoji=e;
+  document.querySelectorAll('.emoji-opt').forEach(el=>{
+    el.classList.toggle('sel-emoji',el.textContent===e);
+  });
+}
+function closeModal(e){
+  if(!e||e.target===document.getElementById('modal-overlay'))
+    document.getElementById('modal-overlay').classList.remove('show');
+}
+function saveNewCat(){
+  const name=document.getElementById('new-cat-name').value.trim();
+  if(!name){alert('กรุณาตั้งชื่อหมวด');return;}
+  const type=document.querySelector('input[name="new-cat-type"]:checked').value;
+  const id='custom_'+Date.now();
+  customCats.push({id,icon:selectedEmoji,label:name,type,custom:true});
+  save();
+  document.getElementById('modal-overlay').classList.remove('show');
+  renderCatGrid();
+}
+function deleteCat(id,e){
+  e.stopPropagation();
+  if(!confirm('ลบหมวดนี้?')) return;
+  customCats=customCats.filter(c=>c.id!==id);
+  if(selectedCat===id) selectedCat='food';
+  save();
+  renderCatGrid();
+}
+
+// ===== QUICK RECORD =====
+function renderCatGrid(){
+  const cats=allCats();
+  document.getElementById('cat-grid').innerHTML=
+    cats.map(c=>`
+      <button class="cat-btn${c.id===selectedCat?' sel':''}${c.type==='income'?' income-cat':''}" onclick="selectCat('${c.id}')">
+        ${c.custom?`<button class="del-cat" onclick="deleteCat('${c.id}',event)">×</button>`:''}
+        <div class="cb-icon">${c.icon}</div>
+        <div class="cb-label">${c.label}</div>
+      </button>`).join('')+
+    `<button class="add-cat-btn" onclick="openModal()">
+      <div class="cb-icon">＋</div>
+      <div class="cb-label">เพิ่มหมวด</div>
+    </button>`;
+  renderNumpad();
+}
+function selectCat(id){selectedCat=id;renderCatGrid();}
+function renderNumpad(){
+  ['1','2','3','4','5','6','7','8','9','00','0','⌫'].forEach((n,i)=>{
+    const existing=document.querySelectorAll('.np-btn')[i];
+    if(!existing){
+      document.getElementById('numpad').innerHTML=
+        ['1','2','3','4','5','6','7','8','9','00','0','⌫'].map(n=>
+          `<button class="np-btn${n==='⌫'?' np-del':''}" onclick="npPress('${n}')">${n}</button>`
+        ).join('');
+    }
+  });
+  if(!document.querySelector('.np-btn')){
+    document.getElementById('numpad').innerHTML=
+      ['1','2','3','4','5','6','7','8','9','00','0','⌫'].map(n=>
+        `<button class="np-btn${n==='⌫'?' np-del':''}" onclick="npPress('${n}')">${n}</button>`
+      ).join('');
+  }
+}
+function npPress(v){
+  if(v==='⌫'){amountStr=amountStr.length>1?amountStr.slice(0,-1):'0';}
+  else if(amountStr==='0'&&v!=='00'){amountStr=v;}
+  else if(amountStr.length<8){amountStr+=v;}
+  document.getElementById('amount-disp').textContent=parseInt(amountStr||0).toLocaleString();
+}
+function quickSave(){
+  const amt=parseInt(amountStr);
+  if(!amt){alert('กรุณาใส่จำนวนเงิน');return;}
+  const cat=getCatInfo(selectedCat);
+  entries.push({id:nextId++,desc:cat.label,amt,type:cat.type,cat:selectedCat});
+  save();
+  amountStr='0';
+  document.getElementById('amount-disp').textContent='0';
+  const st=document.getElementById('quick-status');
+  st.style.color='var(--green)';
+  st.textContent=`✅ บันทึกแล้ว: ${cat.icon} ${cat.label} ฿${amt.toLocaleString()}`;
+  checkBudgetAlert(selectedCat,st);
+  setTimeout(()=>{st.textContent='';},3000);
+  renderEntriesQuick();
+}
+function checkBudgetAlert(cat,el){
+  if(!budgets[cat]) return;
+  const spent=entries.filter(e=>e.type==='expense'&&e.cat===cat).reduce((s,e)=>s+e.amt,0);
+  const pct=spent/budgets[cat]*100;
+  if(pct>=100){el.style.color='var(--red)';el.textContent=`⚠️ เกินงบหมวด${getCatInfo(cat).label}แล้ว! (${Math.round(pct)}%)`;}
+  else if(pct>=80){el.style.color='var(--gold)';el.textContent=`⚠️ หมวด${getCatInfo(cat).label} ใช้ไปแล้ว ${Math.round(pct)}% ของงบ`;}
+}
+function renderEntriesQuick(){
+  const c=document.getElementById('entries-quick');
+  const last=[...entries].slice(-8).reverse();
+  if(!last.length){c.innerHTML='<div class="empty">ยังไม่มีรายการ กดหมวดด้านบนได้เลย</div>';return;}
+  c.innerHTML=`<div class="card"><div class="card-title">รายการล่าสุด</div><div class="entry-list">${last.map(e=>entryHTML(e,true)).join('')}</div></div>`;
+}
+
+// ===== VOICE =====
+let recognition=null,isRecording=false;
+function toggleVoice(){
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){alert('กรุณาใช้ Chrome');return;}
+  if(isRecording){recognition.stop();return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recognition=new SR();recognition.lang='th-TH';recognition.continuous=false;recognition.interimResults=true;
+  recognition.onstart=()=>{isRecording=true;document.getElementById('voice-btn').classList.add('recording');document.getElementById('voice-label').textContent='กำลังฟัง...';document.getElementById('voice-icon').textContent='⏹️';};
+  recognition.onresult=(e)=>{
+    const t=Array.from(e.results).map(r=>r[0].transcript).join('');
+    document.getElementById('voice-result').textContent='🎙️ '+t;
+    if(e.results[e.results.length-1].isFinal) parseVoiceEntry(t);
+  };
+  recognition.onend=()=>{isRecording=false;document.getElementById('voice-btn').classList.remove('recording');document.getElementById('voice-label').textContent='กดเพื่อพูด';document.getElementById('voice-icon').textContent='🎙️';};
+  recognition.start();
+}
+async function parseVoiceEntry(text){
+  document.getElementById('voice-result').textContent='⏳ AI กำลังแปลง: '+text;
+  try{
+    const catIds=allCats().map(c=>c.id).join('/');
+    const r=await callClaude(`แปลงเป็น JSON object เดียว ไม่มีข้อความอื่น ไม่มี markdown: {"desc":"...","amt":0,"type":"expense หรือ income","cat":"${catIds}"}`,text);
+    const obj=JSON.parse(r.replace(/```json|```/g,'').trim());
+    entries.push({id:nextId++,...obj});save();renderEntriesQuick();
+    document.getElementById('voice-result').textContent='✅ บันทึกแล้ว: '+obj.desc+' ฿'+obj.amt;
+  }catch(e){document.getElementById('voice-result').textContent='❌ ลองพูดใหม่อีกครั้ง';}
+}
+
+// ===== RECEIPT =====
+async function handleReceipt(event){
+  const file=event.target.files[0];if(!file) return;
+  const st=document.getElementById('receipt-status');st.textContent='⏳ AI กำลังอ่านใบเสร็จ...';
+  try{
+    const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});
+    const r=await callClaude('อ่านใบเสร็จและแปลงเป็น JSON array ไม่มีข้อความอื่น ไม่มี markdown: [{"desc":"...","amt":0,"type":"expense","cat":"food/transport/util/shopping/other"}]','แปลงรายการในใบเสร็จ',b64,file.type);
+    const arr=JSON.parse(r.replace(/```json|```/g,'').trim());
+    arr.forEach(e=>entries.push({id:nextId++,...e}));save();renderEntriesQuick();
+    st.textContent=`✅ บันทึกแล้ว ${arr.length} รายการ`;
+  }catch(e){st.textContent='❌ ไม่สามารถอ่านได้: '+e.message;}
+}
+
+// ===== BULK =====
+async function bulkAdd(){
+  const text=document.getElementById('bulk-input').value.trim();if(!text) return;
+  const btn=document.getElementById('bulk-btn');btn.disabled=true;btn.textContent='AI กำลังจัดหมวดหมู่...';
+  try{
+    const r=await callClaude('แปลงเป็น JSON array ไม่มีข้อความอื่น ไม่มี markdown: [{"desc":"...","amt":0,"type":"expense หรือ income","cat":"food/transport/util/shopping/income/other"}] ถ้าเงินเดือน/รายรับ ให้ type=income cat=income',text);
+    const arr=JSON.parse(r.replace(/```json|```/g,'').trim());
+    arr.forEach(e=>entries.push({id:nextId++,...e}));save();
+    document.getElementById('bulk-input').value='';renderEntriesQuick();
+  }catch(e){alert('เกิดข้อผิดพลาด: '+e.message);}
+  btn.disabled=false;btn.textContent='เพิ่มทั้งหมด + AI จัดหมวดหมู่ →';
+}
+
+// ===== ENTRIES =====
+function entryHTML(e,showDel=true){
+  const cat=getCatInfo(e.cat);
+  return `<div class="entry">
+    <span class="entry-desc">${cat.icon} ${e.desc}</span>
+    <span class="badge ${catBadgeClass(e.cat)}">${cat.label}</span>
+    <span class="entry-amt ${e.type==='income'?'inc':'exp'}">${e.type==='income'?'+':'-'}฿${e.amt.toLocaleString()}</span>
+    ${showDel?`<button class="del-btn" onclick="deleteEntry(${e.id})">×</button>`:''}
+  </div>`;
+}
+function deleteEntry(id){entries=entries.filter(e=>e.id!==id);save();renderEntriesQuick();}
+
+// ===== SUMMARY =====
+function setReport(m){
+  document.getElementById('btn-week').className='btn'+(m==='week'?' btn-green':'');
+  document.getElementById('btn-month').className='btn'+(m==='month'?' btn-green':'');
+  renderSummary();
+}
+function renderSummary(){
+  const income=entries.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
+  const expense=entries.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
+  const balance=income-expense;
+  document.getElementById('metrics-grid').innerHTML=`
+    <div class="metric"><div class="metric-label">รายรับรวม</div><div class="metric-val" style="color:var(--green)">฿${income.toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-label">รายจ่ายรวม</div><div class="metric-val" style="color:var(--red)">฿${expense.toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-label">คงเหลือ</div><div class="metric-val" style="color:${balance>=0?'var(--green)':'var(--red)'}">฿${balance.toLocaleString()}</div></div>`;
+  const byCat={};entries.filter(e=>e.type==='expense').forEach(e=>{byCat[e.cat]=(byCat[e.cat]||0)+e.amt;});
+  const bars=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const maxAmt=bars[0]?.[1]||1;
+  document.getElementById('chart-card').innerHTML=`<div class="card-title">รายจ่ายตามหมวดหมู่</div>${bars.map(([cat,amt])=>`
+    <div class="bar-row">
+      <div class="bar-meta"><span>${getCatInfo(cat).icon} ${getCatInfo(cat).label}</span><span>฿${amt.toLocaleString()}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(amt/maxAmt*100)}%;background:${catColor[cat]||'#3b5bdb'}"></div></div>
+    </div>`).join('')}`;
+  const topCat=bars[0]?getCatInfo(bars[0][0]).label:'—';
+  document.getElementById('report-card').innerHTML=`
+    <div class="card-title">📋 รายงานสรุป</div>
+    <div class="report-row"><span>รายการทั้งหมด</span><span>${entries.length} รายการ</span></div>
+    <div class="report-row"><span>หมวดที่ใช้มากสุด</span><span>${topCat}</span></div>
+    <div class="report-row"><span>เฉลี่ยรายจ่าย/วัน</span><span>฿${Math.round(expense/30).toLocaleString()}</span></div>
+    <div class="report-row"><span>ยอดคงเหลือสุทธิ</span><span style="color:${balance>=0?'var(--green)':'var(--red)'}">฿${balance.toLocaleString()}</span></div>`;
+  document.getElementById('entries-summary').innerHTML=`<div class="card"><div class="card-title">รายการทั้งหมด</div><div class="entry-list">${entries.map(e=>entryHTML(e,false)).join('')}</div></div>`;
+}
+
+// ===== BUDGET =====
+function renderBudgetForm(){
+  const expCats=allCats().filter(c=>c.type==='expense'&&c.id!=='other');
+  document.getElementById('budget-form').innerHTML=expCats.map(c=>`
+    <div class="form-row">
+      <div style="flex:1;font-size:14px;padding-top:10px;">${c.icon} ${c.label}</div>
+      <input type="number" class="ism" id="budget-${c.id}" value="${budgets[c.id]||''}" placeholder="งบ (บาท)" min="0">
+    </div>`).join('');
+}
+function saveBudgets(){
+  allCats().filter(c=>c.type==='expense'&&c.id!=='other').forEach(c=>{
+    const v=parseFloat(document.getElementById('budget-'+c.id)?.value);
+    if(!isNaN(v)&&v>0) budgets[c.id]=v;
+  });
+  save();renderBudgetStatus();alert('✅ บันทึกงบประมาณแล้ว');
+}
+function renderBudgetStatus(){
+  const expCats=allCats().filter(c=>c.type==='expense'&&c.id!=='other');
+  document.getElementById('budget-status').innerHTML=expCats.map(c=>{
+    const spent=entries.filter(e=>e.type==='expense'&&e.cat===c.id).reduce((s,e)=>s+e.amt,0);
+    const limit=budgets[c.id]||0;if(!limit) return '';
+    const pct=Math.min(100,Math.round(spent/limit*100));
+    const over=pct>=100,warn=pct>=80;
+    return `<div class="budget-item ${over?'bi-warn':''}">
+      <div class="bi-label">${c.icon} ${c.label}${warn?`<span class="alert-badge">${over?'เกินงบ!':'ใกล้เต็ม'}</span>`:''}</div>
+      <div class="bi-bar-wrap">
+        <div class="bi-bar-track"><div class="bi-bar-fill" style="width:${pct}%;background:${over?'var(--red)':warn?'var(--gold)':'var(--green-mid)'}"></div></div>
+        <div class="bi-text">฿${spent.toLocaleString()} / ฿${limit.toLocaleString()} (${pct}%)</div>
+      </div></div>`;
+  }).join('');
+}
+function saveGoal(){
+  const v=parseFloat(document.getElementById('goal-amt').value);
+  if(!isNaN(v)&&v>0){goalAmt=v;save();renderGoal();}
+}
+function renderGoal(){
+  const income=entries.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
+  const expense=entries.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
+  const saved=Math.max(0,income-expense);
+  const pct=Math.min(100,Math.round(saved/goalAmt*100));
+  const r=50,circ=2*Math.PI*r,dash=circ*(pct/100);
+  document.getElementById('goal-display').innerHTML=`
+    <div class="goal-ring-wrap">
+      <div class="goal-ring">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="${r}" fill="none" stroke="var(--gray-light)" stroke-width="12"/>
+          <circle cx="60" cy="60" r="${r}" fill="none" stroke="${pct>=100?'var(--gold)':'var(--green-mid)'}" stroke-width="12"
+            stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}" stroke-linecap="round"/>
+        </svg>
+        <div class="goal-ring-text"><span class="goal-pct">${pct}%</span><span class="goal-sub">ของเป้า</span></div>
+      </div>
+      <div style="font-size:13px;color:var(--muted);margin-top:6px;">ออมได้ ฿${saved.toLocaleString()} จากเป้า ฿${goalAmt.toLocaleString()}</div>
+      ${pct>=100?'<div style="margin-top:8px;font-size:13px;color:var(--gold);font-weight:500;">🎉 ถึงเป้าหมายแล้ว!</div>':''}
+    </div>`;
+  document.getElementById('goal-amt').value=goalAmt;
+}
+
+// ===== BADGES =====
+const BADGES_DEF=[
+  {id:'first',icon:'🌱',name:'มือใหม่หัดออม',desc:'บันทึกรายการแรก',check:()=>entries.length>=1},
+  {id:'streak3',icon:'🔥',name:'3 วันติดต่อกัน',desc:'Streak 3 วัน',check:()=>streak>=3},
+  {id:'streak7',icon:'⚡',name:'สัปดาห์เต็ม',desc:'Streak 7 วัน',check:()=>streak>=7},
+  {id:'save',icon:'💎',name:'นักออมจอมขยัน',desc:'ออมตามเป้าได้',check:()=>{
+    const i=entries.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
+    const x=entries.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);return(i-x)>=goalAmt;
+  }},
+  {id:'ten',icon:'📚',name:'10 รายการ',desc:'บันทึกครบ 10 รายการ',check:()=>entries.length>=10},
+  {id:'variety',icon:'🌈',name:'ครบทุกหมวด',desc:'มีรายการทุกหมวดหลัก',check:()=>['food','transport','util'].every(c=>entries.some(e=>e.cat===c))},
+];
+function renderBadges(){
+  const days=['จ','อ','พ','พฤ','ศ','ส','อา'];
+  document.getElementById('streak-bar').innerHTML=days.map((d,i)=>`
+    <div class="streak-day ${i<streak&&i<6?'done':''} ${i===Math.min(streak,6)?'today':''}">${d}</div>`).join('');
+  document.getElementById('streak-text').textContent=`Streak ปัจจุบัน: ${streak} วัน`;
+  document.getElementById('badges-grid').innerHTML=BADGES_DEF.map(b=>`
+    <div class="badge-card ${b.check()?'earned':''}">
+      <div class="badge-icon">${b.icon}</div>
+      <div class="badge-name">${b.name}</div>
+      <div class="badge-desc">${b.desc}</div>
+    </div>`).join('');
+}
+
+// ===== PREDICT CASH OUT =====
+async function predictCashOut(){
+  if(!entries.length){alert('กรุณาเพิ่มรายการก่อน');return;}
+  const btn=document.getElementById('predict-btn');
+  btn.disabled=true; btn.textContent='AI กำลังคำนวณ...';
+  document.getElementById('predict-output').innerHTML=`
+    <div class="loading-box" style="margin-top:1rem;">
+      <span class="spinner"></span>
+      <span>วิเคราะห์ pattern การใช้เงิน <span class="thinking-dot"></span><span class="thinking-dot"></span><span class="thinking-dot"></span></span>
+    </div>`;
+
+  const income=entries.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
+  const expense=entries.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
+  const balance=income-expense;
+  const dailyAvg=expense/30;
+  const daysLeft=balance>0?Math.floor(balance/dailyAvg):0;
+  const byCat={};entries.filter(e=>e.type==='expense').forEach(e=>{byCat[e.cat]=(byCat[e.cat]||0)+e.amt;});
+  const topCat=Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([c,a])=>`${getCatInfo(c).label}(฿${a.toLocaleString()})`).join(', ');
+
+  try{
+    const text=await callClaude(
+      `คุณเป็น AI วิเคราะห์การเงิน ตอบภาษาไทยเข้าใจง่าย
+ตอบโดยใช้ tag XML เหล่านี้เท่านั้น:
+<days>ตัวเลขวันที่เงินจะหมด (ตัวเลขอย่างเดียว ไม่มีคำอื่น)</days>
+<date>วันที่โดยประมาณที่เงินจะหมด เช่น "ประมาณ 23 เม.ย."</date>
+<warning>บอกสั้นๆ ว่าอันตรายแค่ไหน 1 ประโยค</warning>
+<tip>วิธีที่ทำได้ทันทีเพื่อยืดเวลาให้นานขึ้น 1-2 ประโยค ใช้ตัวเลขจริง</tip>`,
+      `รายรับ:฿${income.toLocaleString()} รายจ่าย:฿${expense.toLocaleString()} คงเหลือ:฿${balance.toLocaleString()} ใช้เฉลี่ย/วัน:฿${Math.round(dailyAvg).toLocaleString()} คาดว่าเหลืออีก:${daysLeft}วัน หมวดใช้มาก:${topCat} วันนี้คือ:${new Date().toLocaleDateString('th-TH')}`
+    );
+    const get=(tag)=>{const m=text.match(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`));return m?m[1].trim():'';};
+    const days=parseInt(get('days'))||daysLeft;
+    const date=get('date');
+    const warning=get('warning');
+    const tip=get('tip');
+    const level=days<=7?'red':days<=15?'gold':'green';
+    const levelColor={'red':'var(--red)','gold':'var(--gold)','green':'var(--green-mid)'};
+    const levelBg={'red':'var(--red-light)','gold':'var(--gold-light)','green':'var(--green-light)'};
+    const levelIcon={'red':'🔴','gold':'🟡','green':'🟢'};
+
+    document.getElementById('predict-output').innerHTML=`
+      <div style="margin-top:1rem;">
+        <div style="background:${levelBg[level]};border-radius:var(--radius);padding:1.25rem;border-left:4px solid ${levelColor[level]};">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+            <div style="font-size:40px;font-family:'Mitr',sans-serif;font-weight:500;color:${levelColor[level]};line-height:1;">${days}</div>
+            <div>
+              <div style="font-size:13px;color:var(--muted);">วันที่เงินจะหมด</div>
+              <div style="font-size:15px;font-weight:500;color:var(--text);">${date||'ประมาณ '+days+' วันข้างหน้า'}</div>
+            </div>
+            <div style="margin-left:auto;font-size:28px;">${levelIcon[level]}</div>
+          </div>
+          <div style="font-size:13px;color:var(--text);margin-bottom:8px;padding:8px 10px;background:rgba(255,255,255,0.6);border-radius:var(--rsm);">
+            ⚠️ ${warning}
+          </div>
+          <div style="font-size:13px;color:var(--text);padding:8px 10px;background:rgba(255,255,255,0.6);border-radius:var(--rsm);">
+            💡 ${tip}
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;">
+          <div class="metric"><div class="metric-label">ใช้เฉลี่ย/วัน</div><div class="metric-val" style="font-size:16px;color:var(--red);">฿${Math.round(dailyAvg).toLocaleString()}</div></div>
+          <div class="metric"><div class="metric-label">เงินคงเหลือ</div><div class="metric-val" style="font-size:16px;color:${balance>=0?'var(--green)':'var(--red)'};">฿${balance.toLocaleString()}</div></div>
+          <div class="metric"><div class="metric-label">เหลืออีก</div><div class="metric-val" style="font-size:16px;color:${levelColor[level]};">${days} วัน</div></div>
+        </div>
+      </div>`;
+  }catch(e){
+    document.getElementById('predict-output').innerHTML=`<div class="loading-box" style="color:var(--red);margin-top:1rem;">เกิดข้อผิดพลาด: ${e.message}</div>`;
+  }
+  btn.disabled=false; btn.textContent='คำนวณเลย →';
+}
+
+// ===== SHOULD I BUY =====
+async function shouldIBuy(){
+  const item=document.getElementById('buy-item').value.trim();
+  const price=parseFloat(document.getElementById('buy-price').value);
+  if(!item||isNaN(price)||price<=0){alert('กรุณากรอกชื่อสินค้าและราคา');return;}
+
+  const btn=document.getElementById('buy-btn');
+  btn.disabled=true; btn.textContent='AI กำลังคิด...';
+  document.getElementById('buy-output').innerHTML=`
+    <div class="loading-box" style="margin-top:1rem;">
+      <span class="spinner"></span>
+      <span>AI กำลังดูสถานการณ์การเงินของคุณ <span class="thinking-dot"></span><span class="thinking-dot"></span><span class="thinking-dot"></span></span>
+    </div>`;
+
+  const income=entries.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
+  const expense=entries.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
+  const balance=income-expense;
+  const monthsNeeded=balance>0?Math.ceil(price/balance):999;
+
+  try{
+    const text=await callClaude(
+      `คุณเป็นเพื่อนที่ช่วยตัดสินใจเรื่องเงิน ตอบภาษาไทยตรงๆ ไม่อ้อมค้อม
+ตอบโดยใช้ tag XML เหล่านี้เท่านั้น:
+<verdict>YES หรือ WAIT หรือ NO อย่างเดียว</verdict>
+<reason>เหตุผลสั้นๆ 1-2 ประโยค ใช้ตัวเลขจริง</reason>
+<months>ถ้าต้องรอ บอกจำนวนเดือนที่ต้องออม (ตัวเลขอย่างเดียว)</months>
+<alternative>ทางเลือกอื่นที่ทำได้ 1 ประโยค</alternative>`,
+      `รายรับ:฿${income.toLocaleString()} รายจ่าย:฿${expense.toLocaleString()} เงินออมได้/เดือน:฿${balance.toLocaleString()} อยากซื้อ:${item} ราคา:฿${price.toLocaleString()} ต้องออมประมาณ:${monthsNeeded}เดือน`
+    );
+    const get=(tag)=>{const m=text.match(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`));return m?m[1].trim():'';};
+    const verdict=get('verdict').toUpperCase();
+    const reason=get('reason');
+    const months=get('months');
+    const alternative=get('alternative');
+
+    const vConfig={
+      'YES':{color:'var(--green)',bg:'var(--green-light)',border:'#b7dfc8',icon:'✅',label:'ซื้อได้เลย!'},
+      'WAIT':{color:'var(--gold)',bg:'var(--gold-light)',border:'#f0d49a',icon:'⏳',label:'รออีกนิด'},
+      'NO':{color:'var(--red)',bg:'var(--red-light)',border:'#f5c6c6',icon:'❌',label:'ยังไม่ควรซื้อ'},
+    };
+    const v=vConfig[verdict]||vConfig['WAIT'];
+
+    document.getElementById('buy-output').innerHTML=`
+      <div style="margin-top:1rem;background:${v.bg};border-radius:var(--radius);padding:1.25rem;border-left:4px solid ${v.color};">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+          <div style="font-size:36px;">${v.icon}</div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);">${item} — ฿${price.toLocaleString()}</div>
+            <div style="font-size:20px;font-weight:500;color:${v.color};font-family:'Mitr',sans-serif;">${v.label}</div>
+          </div>
+        </div>
+        <div style="font-size:14px;color:var(--text);margin-bottom:8px;padding:8px 10px;background:rgba(255,255,255,0.65);border-radius:var(--rsm);line-height:1.7;">
+          ${reason}
+        </div>
+        ${months&&verdict!=='YES'?`<div style="font-size:13px;color:var(--text);margin-bottom:8px;padding:8px 10px;background:rgba(255,255,255,0.65);border-radius:var(--rsm);">
+          🗓️ ถ้าออมต่อเนื่อง จะซื้อได้ใน <strong>${months} เดือน</strong>
+        </div>`:''}
+        ${alternative?`<div style="font-size:13px;color:var(--text);padding:8px 10px;background:rgba(255,255,255,0.65);border-radius:var(--rsm);">
+          💡 ${alternative}
+        </div>`:''}
+      </div>`;
+  }catch(e){
+    document.getElementById('buy-output').innerHTML=`<div class="loading-box" style="color:var(--red);margin-top:1rem;">เกิดข้อผิดพลาด: ${e.message}</div>`;
+  }
+  btn.disabled=false; btn.textContent='ให้ AI ตัดสินใจ →';
+}
+
+// ===== AI ANALYZE =====
+async function analyzeAI(){
+  if(!entries.length){alert('กรุณาเพิ่มรายการก่อน');return;}
+  const btn=document.getElementById('analyze-btn');
+  btn.disabled=true;btn.textContent='AI กำลังวิเคราะห์...';
+  document.getElementById('ai-output').innerHTML=`
+    <div class="loading-box">
+      <span class="spinner"></span>
+      <span>AI กำลังอ่านข้อมูลของคุณ <span class="thinking-dot"></span><span class="thinking-dot"></span><span class="thinking-dot"></span></span>
+    </div>`;
+  const income=entries.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
+  const expense=entries.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
+  const balance=income-expense;
+  const byCat={};entries.filter(e=>e.type==='expense').forEach(e=>{byCat[e.cat]=(byCat[e.cat]||0)+e.amt;});
+  const topSpend=Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([c,a])=>`${getCatInfo(c).label} ฿${a.toLocaleString()}`).join(', ');
+  try{
+    const text=await callClaude(
+      `คุณเป็นเพื่อนที่เข้าใจเรื่องการเงิน พูดตรงๆ อบอุ่น ใช้ภาษาไทยธรรมดา
+
+ตอบโดยแบ่งเป็น 4 ส่วน โดยใช้ tag XML นี้แบ่งชัดเจน:
+
+<status>สรุปสถานการณ์การเงินตอนนี้ว่าเป็นยังไง ดีหรือน่าห่วง พูดตรงๆ 2-3 ประโยค</status>
+
+<watch>ชี้ให้เห็น 1-2 จุดที่น่าสังเกต เช่น ค่าใช้จ่ายหมวดไหนสูงผิดปกติ คิดเป็นกี่เปอร์เซ็นต์ของรายรับ 2-3 ประโยค</watch>
+
+<question>ตั้งคำถาม 1 ข้อที่ทำให้เขาคิดต่อได้เอง เช่น "ถ้าลดค่า... ลงวันละ ... บาท เดือนนึงจะเหลือเงินเพิ่มขึ้นอีก ... บาท แบบนั้นคุ้มมั้ย?" ใช้ตัวเลขจริง</question>
+
+<cheer>ประโยคให้กำลังใจจริงใจ ไม่สำเร็จรูป 1-2 ประโยค</cheer>
+
+ห้ามมีข้อความนอก tag เหล่านี้`,
+      `รายรับ:฿${income.toLocaleString()} รายจ่าย:฿${expense.toLocaleString()} คงเหลือ:฿${balance.toLocaleString()} เป้าออม:฿${goalAmt.toLocaleString()}\nใช้มากสุด:${topSpend}\nรายการ:${entries.map(e=>`${e.desc} ${e.type==='income'?'+':'-'}฿${e.amt}`).join(', ')}`
+    );
+
+    // Parse XML tags
+    const get=(tag)=>{const m=text.match(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`));return m?m[1].trim():'';};
+    const status=get('status'),watch=get('watch'),question=get('question'),cheer=get('cheer');
+
+    document.getElementById('ai-output').innerHTML=`
+      <div class="ai-result-wrap">
+        ${status?`<div class="ai-section ais-status">
+          <div class="ai-section-header">🟢 สถานการณ์ตอนนี้</div>
+          <div class="ai-section-body">${status}</div>
+        </div>`:''}
+        ${watch?`<div class="ai-section ais-watch">
+          <div class="ai-section-header">🟡 จุดที่ควรระวัง</div>
+          <div class="ai-section-body">${watch}</div>
+        </div>`:''}
+        ${question?`<div class="ai-section ais-question">
+          <div class="ai-section-header">🔵 ลองคิดดูนะ...</div>
+          <div class="ai-section-body">${question}</div>
+        </div>`:''}
+        ${cheer?`<div class="ai-section ais-cheer">
+          <div class="ai-section-header">💜 จาก AI ถึงคุณ</div>
+          <div class="ai-section-body">${cheer}</div>
+        </div>`:''}
+        ${!status&&!watch?`<div class="loading-box" style="background:var(--green-light);">${text}</div>`:''}
+      </div>`;
+  }catch(e){
+    document.getElementById('ai-output').innerHTML=`<div class="loading-box" style="color:var(--red);">เกิดข้อผิดพลาด: ${e.message}</div>`;
+  }
+  btn.disabled=false;btn.textContent='วิเคราะห์เลย →';
+}
+
+// ===== AI ADVISOR =====
+const QUICK_QS=['จะออมเงินยังไงดี?','ควรลดรายจ่ายส่วนไหนก่อน?','เงินเหลือน้อย ทำยังไงดี?','อยากมีเงินฉุกเฉิน'];
+let advisorHistory = JSON.parse(localStorage.getItem('bv_advisor_history') || '[]');
+
+function saveAdvisorHistory(){
+  localStorage.setItem('bv_advisor_history', JSON.stringify(advisorHistory));
+}
+
+function renderQuickQuestions(){
+  document.getElementById('quick-questions').innerHTML=QUICK_QS.map(q=>
+    `<button class="btn" style="font-size:12px;padding:6px 12px;border-radius:20px;" onclick="setAdvisorQ('${q}')">${q}</button>`
+  ).join('');
+}
+
+function setAdvisorQ(q){
+  document.getElementById('advisor-q').value=q;
+  document.getElementById('advisor-q').focus();
+}
+
+function formatTime(ts){
+  const d=new Date(ts);
+  return d.toLocaleString('th-TH',{hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'});
+}
+
+async function askAdvisor(){
+  const q=document.getElementById('advisor-q').value.trim(); if(!q) return;
+  document.getElementById('advisor-q').value='';
+
+  const ts=Date.now();
+  // เพิ่มคำถามใหม่ที่ index 0 (ล่าสุดอยู่บน)
+  advisorHistory.unshift({id:ts, role:'user', text:q, ts});
+  renderAdvisorOutput();
+
+  const income=entries.filter(e=>e.type==='income').reduce((s,e)=>s+e.amt,0);
+  const expense=entries.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amt,0);
+
+  // เพิ่ม loading ต่อจากคำถามล่าสุด (index 0)
+  const loadId='load-'+ts;
+  const wrap=document.getElementById('advisor-output');
+  const loadDiv=document.createElement('div');
+  loadDiv.id=loadId;
+  loadDiv.className='q-bubble-ai';
+  loadDiv.style.marginTop='6px';
+  loadDiv.innerHTML=`<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">💬 AI Money Coach</div>
+    <span class="thinking-dot" style="background:var(--blue)"></span>
+    <span class="thinking-dot" style="background:var(--blue)"></span>
+    <span class="thinking-dot" style="background:var(--blue)"></span>`;
+  // แทรกหลัง user bubble แรก
+  const firstBubble=wrap.querySelector('.q-pair');
+  if(firstBubble) firstBubble.appendChild(loadDiv);
+
+  try{
+    const text=await callClaude(
+      `คุณเป็นโค้ชการเงินที่เข้าอกเข้าใจคน ตอบภาษาไทยธรรมดา เป็นกันเอง
+ตอบโดยแบ่งเป็น 2 ส่วนโดยใช้ tag XML:
+<answer>ตอบคำถามโดยใช้ตัวเลขจริงของเขา ช่วยให้เห็นภาพชัด 2-4 ประโยค ไม่ต้องเกริ่น</answer>
+<think>ตั้งคำถาม 1 ข้อให้เขาคิดต่อเอง ที่จะช่วยให้เขาตัดสินใจได้เอง</think>
+ห้ามมีข้อความนอก tag`,
+      `ข้อมูล: รายรับ฿${income.toLocaleString()} รายจ่าย฿${expense.toLocaleString()} คงเหลือ฿${(income-expense).toLocaleString()}\nคำถาม: ${q}`
+    );
+    const get=(tag)=>{const m=text.match(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`));return m?m[1].trim():'';};
+    const answer=get('answer'),think=get('think');
+    const formatted=`${answer||text}${think?`<div style="margin-top:10px;padding:10px 12px;background:rgba(26,86,219,0.08);border-radius:var(--rsm);font-size:13px;color:var(--blue);">🔵 ${think}</div>`:''}`;
+    // แทรก AI reply ต่อจาก user ที่ index 0
+    advisorHistory.splice(1, 0, {id:ts+'_ai', role:'ai', text:formatted, ts:Date.now(), qId:ts});
+    saveAdvisorHistory();
+    renderAdvisorOutput();
+    renderHistoryList();
+  }catch(e){
+    advisorHistory.splice(1, 0, {id:ts+'_ai', role:'ai', text:`เกิดข้อผิดพลาด: ${e.message}`, ts:Date.now(), qId:ts});
+    saveAdvisorHistory();
+    renderAdvisorOutput();
+  }
+}
+
+function renderAdvisorOutput(){
+  const wrap=document.getElementById('advisor-output');
+  if(!advisorHistory.length){wrap.innerHTML='';return;}
+
+  // จับคู่ user+ai แล้วแสดงล่าสุดบนสุด
+  const pairs=[];
+  let i=0;
+  while(i<advisorHistory.length){
+    if(advisorHistory[i].role==='user'){
+      const user=advisorHistory[i];
+      const ai=advisorHistory[i+1]?.role==='ai' ? advisorHistory[i+1] : null;
+      pairs.push({user, ai});
+      i+=ai?2:1;
+    } else { i++; }
+  }
+
+  wrap.innerHTML=pairs.map((p,idx)=>`
+    <div class="q-pair${idx>0?' q-pair-old':''}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+        <span style="font-size:11px;color:var(--muted);">🕐 ${formatTime(p.user.ts)}</span>
+        ${idx>0?`<button class="btn" style="font-size:11px;padding:3px 9px;" onclick="togglePair(${p.user.ts})">ดู/ซ่อน</button>`:''}
+      </div>
+      <div class="q-bubble-user">${p.user.text}</div>
+      ${p.ai?`<div class="q-bubble-ai" id="pair-${p.user.ts}" style="margin-top:6px;${idx>0?'display:none;':''}">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">💬 AI Money Coach</div>
+        ${p.ai.text}
+      </div>`:'<div class="q-bubble-ai" style="margin-top:6px;color:var(--muted);font-size:13px;">กำลังรอคำตอบ...</div>'}
+    </div>`).join('<hr style="border:none;border-top:1px dashed var(--border);margin:12px 0;">');
+
+  renderHistoryList();
+  updateHistoryCard();
+}
+
+function togglePair(ts){
+  const el=document.getElementById('pair-'+ts);
+  if(el) el.style.display=el.style.display==='none'?'block':'none';
+}
+
+function updateHistoryCard(){
+  const card=document.getElementById('history-card');
+  if(advisorHistory.filter(h=>h.role==='user').length>0){
+    card.style.display='block';
+  } else {
+    card.style.display='none';
+  }
+}
+
+function renderHistoryList(){
+  const questions=advisorHistory.filter(h=>h.role==='user');
+  if(!questions.length){
+    document.getElementById('history-list').innerHTML='<div class="empty">ยังไม่มีประวัติการถาม</div>';
+    return;
+  }
+  document.getElementById('history-list').innerHTML=questions.map((q,i)=>`
+    <div class="history-item">
+      <div class="history-num">${i+1}</div>
+      <div class="history-content">
+        <div class="history-q">${q.text}</div>
+        <div class="history-time">🕐 ${formatTime(q.ts)}</div>
+      </div>
+      <button class="btn" style="font-size:12px;padding:5px 10px;" onclick="reaskQuestion('${q.text.replace(/'/g,"\\'")}')">ถามซ้ำ</button>
+    </div>`).join('');
+}
+
+function reaskQuestion(q){
+  document.getElementById('advisor-q').value=q;
+  document.getElementById('advisor-q').scrollIntoView({behavior:'smooth'});
+  document.getElementById('advisor-q').focus();
+}
+
+function clearHistory(){
+  if(!confirm('ล้างประวัติการถามทั้งหมด?')) return;
+  advisorHistory=[];
+  saveAdvisorHistory();
+  renderAdvisorOutput();
+  document.getElementById('history-card').style.display='none';
+}
+
+// ===== INIT =====
+renderCatGrid();
+renderEntriesQuick();
+renderQuickQuestions();
+if(advisorHistory.length) { renderAdvisorOutput(); }
+</script>
+</body>
+</html>
